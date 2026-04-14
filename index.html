@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SGX Story Time - Temporal Ubershader V2</title>
+    <title>SGX Story Time - Temporal Visualizer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
@@ -13,7 +13,7 @@
             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; 
             overflow: hidden; 
             margin: 0; 
-            touch-action: none; 
+            touch-action: manipulation; 
         }
         
         /* SGX Identity */
@@ -41,6 +41,14 @@
         .timeline-container { position: relative; width: 100%; padding: 15px 0; }
         .decade-marker { position: absolute; top: -5px; font-size: 9px; color: #64748b; transform: translateX(-50%); }
         
+        /* Color Picker */
+        input[type=color] {
+            -webkit-appearance: none; border: none; width: 32px; height: 32px; border-radius: 4px; cursor: pointer; padding: 0;
+            background: transparent; border: 1px solid #334155;
+        }
+        input[type=color]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type=color]::-webkit-color-swatch { border: none; border-radius: 4px; }
+
         /* Layout */
         #webgl-container { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; }
         canvas { display: block; width: 100%; height: 100%; object-fit: cover; }
@@ -64,7 +72,7 @@
         <div class="flex justify-between items-start pointer-events-auto">
             <div>
                 <h1 class="text-xl md:text-2xl font-black italic tracking-tighter sgx-accent">SGX STORY</h1>
-                <p class="text-[9px] md:text-[10px] tracking-[0.2em] text-gray-400">TEMPORAL ENGINE V2</p>
+                <p class="text-[9px] md:text-[10px] tracking-[0.2em] text-gray-400">TEMPORAL ENGINE V3</p>
             </div>
             <div class="text-right">
                 <div id="current-decade-display" class="text-3xl md:text-4xl font-black tracking-tighter text-white drop-shadow-[0_0_10px_rgba(253,204,13,0.5)]">2020s</div>
@@ -73,17 +81,26 @@
         </div>
 
         <!-- Controls (Bottom) -->
-        <div class="pointer-events-auto sgx-panel sgx-border rounded-xl p-4 flex flex-col gap-3 max-w-md mx-auto w-full">
+        <div class="pointer-events-auto sgx-panel sgx-border rounded-xl p-4 flex flex-col gap-3 max-w-md mx-auto w-full shadow-2xl">
             
             <!-- Intensity & Scale -->
             <div class="grid grid-cols-2 gap-4 border-b border-gray-800 pb-3">
                 <div>
-                    <div class="flex justify-between text-[9px] font-mono font-bold text-gray-400 mb-1"><label>INTENSITY</label><span id="val-int" class="sgx-accent">1.00</span></div>
+                    <div class="flex justify-between text-[9px] font-mono font-bold text-gray-400 mb-1"><label>FX INTENSITY</label><span id="val-int" class="sgx-accent">1.00</span></div>
                     <input type="range" id="sl-int" min="0" max="2" step="0.05" value="1.0">
                 </div>
                 <div>
-                    <div class="flex justify-between text-[9px] font-mono font-bold text-gray-400 mb-1"><label>SCALE / FREQ</label><span id="val-scale" class="sgx-accent">1.00</span></div>
+                    <div class="flex justify-between text-[9px] font-mono font-bold text-gray-400 mb-1"><label>FX SCALE</label><span id="val-scale" class="sgx-accent">1.00</span></div>
                     <input type="range" id="sl-scale" min="0.1" max="3" step="0.1" value="1.0">
+                </div>
+            </div>
+
+            <!-- Global Tint Control -->
+            <div class="flex items-center gap-3 border-b border-gray-800 pb-3">
+                <input type="color" id="in-color" value="#FDCC0D">
+                <div class="flex-1">
+                    <div class="flex justify-between text-[9px] font-mono font-bold text-gray-400 mb-1"><label>GLOBAL TINT BLEND</label><span id="val-tint" class="sgx-accent">0.00</span></div>
+                    <input type="range" id="sl-tint" min="0" max="1" step="0.05" value="0.0">
                 </div>
             </div>
 
@@ -102,17 +119,19 @@
                     <span class="decade-marker" style="left: 90%;">20s</span>
                     <span class="decade-marker" style="left: 100%;">30s</span>
                 </div>
-                <!-- 11 steps: 1930, 1940, 1950, 1960, 1970, 1980, 1990, 2000, 2010, 2020, 2030 -->
                 <input type="range" id="decade-slider" min="1930" max="2030" step="10" value="2020">
             </div>
 
             <!-- Action Buttons -->
             <div class="flex gap-2 mt-1">
-                <button id="btn-cam" class="flex-1 bg-[#1f2937] hover:bg-[#334155] text-white text-[10px] font-bold py-3 rounded tracking-widest transition-colors border border-gray-700">
+                <button id="btn-cam" class="flex-1 bg-[#1f2937] hover:bg-[#334155] text-white text-[10px] font-bold py-3 rounded tracking-widest transition-colors border border-gray-700 uppercase">
                     INIT CAM
                 </button>
-                <button id="btn-photo" class="flex-1 bg-[#32527B] hover:bg-blue-600 text-white text-[10px] font-bold py-3 rounded tracking-widest transition-colors shadow-lg disabled:opacity-50" disabled>
-                    CAPTURE
+                <button id="btn-flip" class="flex-1 bg-[#32527B] hover:bg-blue-500 text-white text-[10px] font-bold py-3 rounded tracking-widest transition-colors border border-gray-700 uppercase hidden">
+                    FLIP CAM
+                </button>
+                <button id="btn-photo" class="flex-1 bg-[#1f2937] hover:bg-gray-600 text-white text-[10px] font-bold py-3 rounded tracking-widest transition-colors border border-gray-700 disabled:opacity-50" disabled>
+                    SHOT
                 </button>
                 <button id="btn-record" class="flex-1 sgx-bg-accent hover:bg-yellow-400 text-[10px] font-bold py-3 rounded tracking-widest transition-colors shadow-[0_0_15px_rgba(253,204,13,0.3)] disabled:opacity-50" disabled>
                     REC
@@ -131,17 +150,22 @@
         const sliderDecade = document.getElementById('decade-slider');
         const sliderInt = document.getElementById('sl-int');
         const sliderScale = document.getElementById('sl-scale');
+        const sliderTint = document.getElementById('sl-tint');
+        const colorPicker = document.getElementById('in-color');
         
         const decadeDisplay = document.getElementById('current-decade-display');
         const decadeDesc = document.getElementById('decade-desc');
         const valInt = document.getElementById('val-int');
         const valScale = document.getElementById('val-scale');
+        const valTint = document.getElementById('val-tint');
         
         const btnCam = document.getElementById('btn-cam');
+        const btnFlip = document.getElementById('btn-flip');
         const btnPhoto = document.getElementById('btn-photo');
         const btnRecord = document.getElementById('btn-record');
 
         let isStreamActive = false;
+        let currentFacingMode = 'user'; // 'user' (frontal) o 'environment' (trasera)
 
         const decadeMeta = {
             1930: "Sepia / Celluloid Scratches",
@@ -154,8 +178,13 @@
             2000: "Y2K Digital / Bloom",
             2010: "Insta Filter / Teal & Orange",
             2020: "SGX Cyberpunk / High Contrast",
-            2030: "Neural AR / Edge Glow"
+            2030: "Neural AR / Edge Dot-Grid"
         };
+
+        function hexToRgb(hex) {
+            let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? { r: parseInt(result[1], 16)/255, g: parseInt(result[2], 16)/255, b: parseInt(result[3], 16)/255 } : { r:1, g:1, b:1 };
+        }
 
         // --- 2. THREE.JS UBERSHADER SETUP ---
         const scene = new THREE.Scene();
@@ -186,7 +215,7 @@
             }
         `;
 
-        // THE KERNEL: 11 Decades parameterized by Intensity and Scale.
+        // THE KERNEL: 11 Decades + Global Luma-Tint + Aspect Ratio Corrected Dots
         const fragmentShader = `
             uniform sampler2D tDiffuse;
             uniform float u_time;
@@ -194,6 +223,9 @@
             uniform float u_intensity;
             uniform float u_scale;
             uniform vec2 u_resolution;
+            uniform float u_flip;
+            uniform vec3 u_tint_color;
+            uniform float u_tint_power;
 
             varying vec2 vUv;
 
@@ -201,7 +233,7 @@
             float rand(vec2 co) { return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453); }
             float getLuma(vec3 color) { return dot(color, vec3(0.299, 0.587, 0.114)); }
             
-            // RGB Split for VHS/Glitch modulated by Intensity
+            // RGB Split for VHS/Glitch
             vec3 rgbSplit(sampler2D tex, vec2 uv, float splitAmount) {
                 float r = texture2D(tex, vec2(uv.x + splitAmount, uv.y)).r;
                 float g = texture2D(tex, uv).g;
@@ -211,10 +243,15 @@
 
             void main() {
                 vec2 uv = vUv;
+                
+                // Flip camera horizontally if front-facing
+                if(u_flip > 0.5) {
+                    uv.x = 1.0 - uv.x;
+                }
+
                 vec3 color = texture2D(tDiffuse, uv).rgb;
                 float time = u_time;
                 float luma = getLuma(color);
-                
                 vec3 finalColor = color;
                 
                 // Base noise modulated by scale and time
@@ -223,26 +260,23 @@
                 // --- DECADE LOGIC PIPELINE ---
 
                 if (u_decade < 1935.0) {
-                    // 1930s: Sepia, Scratches, Frame Jump
-                    // Jump logic (Intensity controls how often, Scale controls jump height)
+                    // 1930s: Sepia & Scratches
                     if (fract(time * 2.0) > (1.0 - 0.1 * u_intensity)) {
                         uv.y = fract(uv.y + (rand(vec2(time)) * 0.1 * u_scale));
                         color = texture2D(tDiffuse, uv).rgb;
                         luma = getLuma(color);
                     }
-                    // Sepia Tint
                     vec3 sepia = vec3(1.2, 1.0, 0.8) * luma;
                     finalColor = mix(vec3(luma), sepia, u_intensity);
                     
-                    // Procedural Scratches
                     float scratch = fract(sin(uv.x * 100.0 * u_scale) * time);
                     if (scratch < 0.01 * u_intensity) finalColor += vec3(0.2);
                     
                     finalColor += noise * 0.2 * u_intensity;
-                    finalColor *= smoothstep(1.5, 0.4 - (0.2 * u_intensity), length(uv - 0.5)); // Heavy Vig
+                    finalColor *= smoothstep(1.5, 0.4 - (0.2 * u_intensity), length(uv - 0.5));
                 }
                 else if (u_decade < 1945.0) {
-                    // 1940s: Noir B&W, High Contrast, Heavy Grain
+                    // 1940s: Noir B&W
                     float contrast = 1.0 + (1.0 * u_intensity);
                     float bw = (luma - 0.5) * contrast + 0.5;
                     finalColor = vec3(bw);
@@ -250,14 +284,14 @@
                     finalColor *= smoothstep(1.2, 0.3, length(uv - 0.5));
                 } 
                 else if (u_decade < 1955.0) {
-                    // 1950s: Technicolor 2-Strip (Red/Green emphasis)
+                    // 1950s: 2-Strip
                     vec3 tc = vec3(color.r * 1.2, color.g * 1.1, color.b * 0.7);
                     tc = mix(vec3(luma), tc, 1.0 + (0.5 * u_intensity));
                     finalColor = mix(color, tc, u_intensity);
                     finalColor += noise * 0.15 * u_intensity;
                 }
                 else if (u_decade < 1965.0) {
-                    // 1960s: Kodachrome Warm Fade
+                    // 1960s: Kodachrome Warm
                     vec3 warm = vec3(luma * 1.2, luma * 0.9, luma * 0.6);
                     finalColor = mix(finalColor, warm, 0.6 * u_intensity);
                     finalColor.r *= 1.0 + (0.15 * u_intensity); 
@@ -265,10 +299,8 @@
                     finalColor += noise * 0.1 * u_intensity;
                 }
                 else if (u_decade < 1975.0) {
-                    // 1970s: Psychedelic Saturation & Light Leaks
-                    finalColor = mix(vec3(luma), finalColor, 1.0 + (0.8 * u_intensity)); // Oversaturate
-                    
-                    // Light Leak driven by scale (size) and intensity (brightness)
+                    // 1970s: Psychedelic
+                    finalColor = mix(vec3(luma), finalColor, 1.0 + (0.8 * u_intensity)); 
                     float leak = sin(uv.x * (5.0 * u_scale) + time) * cos(uv.y * (3.0 * u_scale) + time * 0.5);
                     if(uv.x > 0.6) finalColor.r += max(0.0, leak * 0.4 * u_intensity);
                     finalColor *= vec3(1.0 + (0.1 * u_intensity), 1.0, 1.0 - (0.2 * u_intensity)); 
@@ -276,64 +308,54 @@
                 else if (u_decade < 1985.0) {
                     // 1980s: VHS
                     float scanline = sin(uv.y * (800.0 * u_scale)) * 0.04 * u_intensity;
-                    
-                    // Tracking jitter
                     if(fract(time * 0.5) > (1.0 - 0.1 * u_intensity) && uv.y > 0.8) {
                         uv.x += (rand(vec2(time)) - 0.5) * 0.1 * u_scale;
                     }
                     finalColor = rgbSplit(tDiffuse, uv, 0.008 * u_intensity);
                     finalColor -= scanline;
-                    finalColor = mix(finalColor, vec3(getLuma(finalColor)), 0.3 * u_intensity); // Desat
-                    finalColor *= vec3(1.0, 1.0 - (0.1 * u_intensity), 1.0 + (0.1 * u_intensity)); // Magenta shift
+                    finalColor = mix(finalColor, vec3(getLuma(finalColor)), 0.3 * u_intensity);
+                    finalColor *= vec3(1.0, 1.0 - (0.1 * u_intensity), 1.0 + (0.1 * u_intensity));
                 }
                 else if (u_decade < 1995.0) {
-                    // 1990s: Camcorder / Data Mosh
+                    // 1990s: Data Mosh
                     float glitch = step(0.98 - (0.05 * u_intensity), sin(time * 10.0 + uv.y * (20.0 * u_scale))) * 0.05 * u_intensity;
                     uv.x += glitch;
                     finalColor = rgbSplit(tDiffuse, uv, 0.015 * u_intensity);
-                    
-                    // Low res pixelation simulation
                     float pixels = 150.0 / u_scale;
                     vec2 pixelUv = floor(uv * pixels) / pixels;
                     finalColor = mix(finalColor, texture2D(tDiffuse, pixelUv).rgb, u_intensity);
                 }
                 else if (u_decade < 2005.0) {
-                    // 2000s: Early Digital / Bloom & Over-sharpen
+                    // 2000s: Digital Bloom
                     vec2 texel = (1.0 / u_resolution) * u_scale * 3.0;
                     vec3 blur = texture2D(tDiffuse, uv + texel).rgb * 0.25 +
                                 texture2D(tDiffuse, uv - texel).rgb * 0.25 +
                                 texture2D(tDiffuse, uv + vec2(texel.x, -texel.y)).rgb * 0.25 +
                                 texture2D(tDiffuse, uv + vec2(-texel.x, texel.y)).rgb * 0.25;
-                    
-                    // Sharpen trick: original + (original - blurred)
                     finalColor += (finalColor - blur) * (2.0 * u_intensity);
-                    finalColor = mix(vec3(luma), finalColor, 1.0 + (0.5 * u_intensity)); // Sat
+                    finalColor = mix(vec3(luma), finalColor, 1.0 + (0.5 * u_intensity));
                 }
                 else if (u_decade < 2015.0) {
-                    // 2010s: Insta Filter (Teal & Orange)
+                    // 2010s: Teal & Orange
                     float tLuma = getLuma(finalColor);
-                    vec3 shadows = vec3(0.05, 0.15, 0.25); // Teal
-                    vec3 highlights = vec3(1.0, 0.85, 0.7); // Orange
+                    vec3 shadows = vec3(0.05, 0.15, 0.25);
+                    vec3 highlights = vec3(1.0, 0.85, 0.7);
                     vec3 graded = mix(shadows, highlights, tLuma);
                     finalColor = mix(color, graded, 0.8 * u_intensity);
-                    finalColor += vec3(0.08 * u_intensity); // Faded blacks
+                    finalColor += vec3(0.08 * u_intensity);
                     finalColor *= smoothstep(1.5, 0.5 - (0.2 * u_scale), length(uv - 0.5));
                 }
                 else if (u_decade < 2025.0) {
-                    // 2020s: SGX Prístino (Cyberpunk clean)
+                    // 2020s: SGX Prístino
                     finalColor = rgbSplit(tDiffuse, uv, 0.003 * u_intensity * u_scale);
-                    // Contrast
                     finalColor = (finalColor - 0.5) * (1.0 + 0.3 * u_intensity) + 0.5;
-                    
-                    // SGX Tint (Azul Metálico sombras, Amarillo Metálico highlights)
-                    vec3 sgxBlue = vec3(0.2, 0.32, 0.48); // #32527B
-                    vec3 sgxYellow = vec3(0.99, 0.8, 0.05); // #FDCC0D
+                    vec3 sgxBlue = vec3(0.2, 0.32, 0.48);
+                    vec3 sgxYellow = vec3(0.99, 0.8, 0.05);
                     if(luma < 0.5) finalColor = mix(finalColor, sgxBlue, 0.15 * u_intensity);
                     else finalColor = mix(finalColor, sgxYellow, 0.1 * u_intensity);
                 }
                 else {
-                    // 2030s: Neural AR / Edge Glow
-                    // Edge detection (Sobel approximation)
+                    // 2030s: Neural AR / Perfect Edge Dot-Grid
                     vec2 texel = (1.0 / u_resolution) * u_scale * 2.0;
                     float s00 = getLuma(texture2D(tDiffuse, uv + texel * vec2(-1, -1)).rgb);
                     float s22 = getLuma(texture2D(tDiffuse, uv + texel * vec2(1, 1)).rgb);
@@ -341,19 +363,35 @@
                     float s20 = getLuma(texture2D(tDiffuse, uv + texel * vec2(1, -1)).rgb);
                     float edge = abs(s00 - s22) + abs(s02 - s20);
                     
-                    // Holographic Grid
-                    float grid = sin(uv.x * 200.0 * u_scale) * sin(uv.y * 200.0 * u_scale);
-                    grid = step(0.95, grid) * 0.2;
+                    // ASPECT RATIO CORRECTED DOTS
+                    vec2 aspectUv = uv;
+                    aspectUv.x *= u_resolution.x / u_resolution.y; // Match width to height proportions
+                    
+                    vec2 gridUv = aspectUv * 120.0 * u_scale; // Size of dots
+                    vec2 cellCenter = fract(gridUv) - 0.5; // -0.5 to 0.5 range
+                    
+                    // Creates perfect circles
+                    float dotGrid = 1.0 - step(0.15, length(cellCenter));
                     
                     vec3 arGlow = vec3(0.99, 0.8, 0.05) * edge * 5.0; // SGX Gold edges
-                    vec3 baseDark = color * (1.0 - (0.5 * u_intensity)); // Darken base reality
+                    vec3 baseDark = color * (1.0 - (0.5 * u_intensity)); 
                     
-                    finalColor = mix(color, baseDark + arGlow + vec3(0.2, 0.32, 0.48)*grid, u_intensity);
+                    // Integrate dots
+                    finalColor = mix(color, baseDark + arGlow + vec3(0.2, 0.32, 0.48) * dotGrid, u_intensity);
+                }
+
+                // --- GLOBAL TINT (LUMA MULTIPLY) ---
+                if (u_tint_power > 0.0) {
+                    // This tints the highlights/midtones cleanly without muddying blacks
+                    vec3 lumaTint = getLuma(finalColor) * u_tint_color * 2.0; 
+                    finalColor = mix(finalColor, lumaTint, u_tint_power);
                 }
 
                 gl_FragColor = vec4(clamp(finalColor, 0.0, 1.0), 1.0);
             }
         `;
+
+        const initColor = hexToRgb(colorPicker.value);
 
         const shaderMat = new THREE.ShaderMaterial({
             uniforms: {
@@ -362,7 +400,10 @@
                 u_decade: { value: 2020.0 },
                 u_intensity: { value: 1.0 },
                 u_scale: { value: 1.0 },
-                u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
+                u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+                u_flip: { value: 1.0 }, // 1.0 = Frontal (espejo), 0.0 = Trasera
+                u_tint_color: { value: new THREE.Vector3(initColor.r, initColor.g, initColor.b) },
+                u_tint_power: { value: 0.0 }
             },
             vertexShader: vertexShader,
             fragmentShader: fragmentShader
@@ -374,29 +415,45 @@
 
         const clock = new THREE.Clock();
 
-        // --- 3. CAMERA & RENDER LOOP ---
+        // --- 3. CAMERA FLIP & RENDER LOOP ---
+        let currentStream = null;
+
         async function startCamera() {
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+            }
+
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } }, 
+                    video: { facingMode: currentFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } }, 
                     audio: false 
                 });
+                
+                currentStream = stream;
                 video.srcObject = stream;
-                video.play();
+                await video.play();
                 
                 video.onloadedmetadata = () => {
                     texCanvas.width = video.videoWidth;
                     texCanvas.height = video.videoHeight;
+                    
+                    // Setup UV Flip (Front camera requires mirroring)
+                    shaderMat.uniforms.u_flip.value = (currentFacingMode === 'user') ? 1.0 : 0.0;
+                    
                     resize();
-                    isStreamActive = true;
-                    btnCam.classList.add('hidden');
-                    btnPhoto.disabled = false;
-                    btnRecord.disabled = false;
-                    drawFrame();
+                    
+                    if (!isStreamActive) {
+                        isStreamActive = true;
+                        btnCam.classList.add('hidden');
+                        btnFlip.classList.remove('hidden');
+                        btnPhoto.disabled = false;
+                        btnRecord.disabled = false;
+                        drawFrame();
+                    }
                 };
             } catch (err) {
                 console.error("Camera access denied or failed", err);
-                alert("Necesitas habilitar la cámara para usar el SGX Temporal Engine.");
+                alert("Error al acceder a la cámara. Asegúrate de dar los permisos correspondientes.");
             }
         }
 
@@ -412,6 +469,11 @@
             shaderMat.uniforms.u_time.value = clock.getElapsedTime();
             renderer.render(scene, camera);
         }
+
+        btnFlip.addEventListener('click', () => {
+            currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+            startCamera();
+        });
 
         // --- 4. UI INTERACTION (TWEAK ZONES) ---
         sliderDecade.addEventListener('input', (e) => {
@@ -429,6 +491,17 @@
         sliderScale.addEventListener('input', (e) => {
             valScale.innerText = parseFloat(e.target.value).toFixed(2);
             shaderMat.uniforms.u_scale.value = parseFloat(e.target.value);
+        });
+
+        // Global Tint Handlers
+        sliderTint.addEventListener('input', (e) => {
+            valTint.innerText = parseFloat(e.target.value).toFixed(2);
+            shaderMat.uniforms.u_tint_power.value = parseFloat(e.target.value);
+        });
+
+        colorPicker.addEventListener('input', (e) => {
+            const c = hexToRgb(e.target.value);
+            shaderMat.uniforms.u_tint_color.value.set(c.r, c.g, c.b);
         });
 
         btnCam.addEventListener('click', startCamera);
@@ -461,6 +534,7 @@
                 sliderDecade.disabled = false;
                 sliderInt.disabled = false;
                 sliderScale.disabled = false;
+                sliderTint.disabled = false;
                 return;
             }
 
@@ -481,7 +555,7 @@
                 const a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = url;
-                a.download = `SGX_Video_${sliderDecade.value}s_I${sliderInt.value}_S${sliderScale.value}.webm`;
+                a.download = `SGX_Video_${sliderDecade.value}s.webm`;
                 document.body.appendChild(a);
                 a.click();
                 setTimeout(() => { document.body.removeChild(a); window.URL.revokeObjectURL(url); }, 100);
@@ -495,6 +569,7 @@
             sliderDecade.disabled = true;
             sliderInt.disabled = true; 
             sliderScale.disabled = true;
+            sliderTint.disabled = true;
         });
 
         resize();
