@@ -1,0 +1,474 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Orbitron", ui-sans-serif, system-ui, sans-serif;
+  --font-hud: "Chakra Petch", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Exo 2", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Share Tech Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-sgx-yellow: #FDCC0D;
+  --color-sgx-cyan: #00DDFF;
+  --color-sgx-blue: #32527B;
+  --color-sgx-orange: #B87000;
+  --color-sgx-neon-orange: #FFBB00;
+  --color-sgx-grey: #888888;
+  --color-sgx-dark-grey: #333333;
+  --color-sgx-metal-dark: #1A1A1A;
+  --color-sgx-black-base: #050505;
+  --color-sgx-navy: #05080F;
+  --color-sgx-cream: #FFF9E2;
+
+  --radius: 0px;
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+}
+
+:root {
+  /* Official SGX v2026.10 Palette */
+  --SGX_Yellow: #FDCC0D;
+  --SGX_Cyan: #00DDFF;
+  --SGX_Blue: #32527B;
+  --SGX_Orange: #B87000;
+  --SGX_Neon_Orange: #FFBB00;
+  --SGX_Grey: #888888;
+  --SGX_Dark_Grey: #333333;
+  --SGX_Metal_Dark: #1A1A1A;
+  --SGX_Black_Base: #050505;
+  --SGX_Navy: #05080F;
+  --SGX_White: #FFFFFF;
+  --SGX_Cream: #FFF9E2;
+
+  /* Pillar Accent: SGX.Story */
+  --pillar: var(--SGX_Blue);
+
+  /* Dark HUD Roles (Default) */
+  --surface: var(--SGX_Black_Base);
+  --surface-elevated: var(--SGX_Metal_Dark);
+  --panel: rgba(10, 13, 18, 0.9);
+  --panel-solid: rgba(16, 18, 22, 0.96);
+  --panel-line: rgba(50, 82, 123, 0.72);
+  --grid-line: rgba(50, 82, 123, 0.28);
+  --line: var(--SGX_Dark_Grey);
+  --ink: var(--SGX_White);
+  --ink-muted: #A3A3A3;
+  --action-line: var(--SGX_Yellow);
+  --accent-text: var(--SGX_Yellow);
+  --action-tint: rgba(253, 204, 13, 0.08);
+  --on-action: var(--SGX_Black_Base);
+  --ground-tint: rgba(184, 112, 0, 0.14);
+  --telemetry: var(--SGX_Cyan);
+  --alert-line: var(--SGX_Neon_Orange);
+  --on-alert: var(--SGX_Black_Base);
+  --focus-ring: var(--SGX_Cyan);
+  --disabled: #5E5E5E;
+
+  /* Spacing & Engineering Cuts */
+  --space-xs: 5px;
+  --space-sm: 10px;
+  --space-md: 15px;
+  --space-lg: 20px;
+  --space-xl: 40px;
+  --cut-lg: 15px;
+  --cut-md: 10px;
+  --cut-sm: 7px;
+  --glow-action: 0 0 15px rgba(253, 204, 13, 0.45);
+}
+
+[data-theme="light"] {
+  --surface: var(--SGX_White);
+  --surface-elevated: var(--SGX_Cream);
+  --panel: rgba(255, 255, 255, 0.94);
+  --panel-solid: rgba(255, 252, 240, 0.98);
+  --panel-line: rgba(50, 82, 123, 0.65);
+  --grid-line: rgba(50, 82, 123, 0.18);
+  --line: #BDBDBD;
+  --ink: var(--SGX_Metal_Dark);
+  --ink-muted: var(--SGX_Blue);
+  --action-line: var(--SGX_Black_Base);
+  --accent-text: var(--SGX_Black_Base);
+  --action-tint: var(--SGX_Cream);
+  --on-action: var(--SGX_Black_Base);
+  --ground-tint: #F7EEE0;
+  --telemetry: var(--SGX_Blue);
+  --alert-line: var(--SGX_Orange);
+  --on-alert: var(--SGX_Black_Base);
+  --focus-ring: var(--SGX_Blue);
+  --disabled: #888888;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-body);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Safe-area padding helpers for mobile notches & home indicators */
+.sgx-safe-top {
+  padding-top: max(10px, env(safe-area-inset-top));
+}
+
+.sgx-safe-bottom {
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+
+/* Measured contrast scrims so minimal HUD reads clearly over bright frames */
+.sgx-scrim-top {
+  background: linear-gradient(180deg, rgba(5, 5, 5, 0.82) 0%, rgba(5, 5, 5, 0.36) 65%, transparent 100%);
+}
+
+.sgx-scrim-bottom {
+  background: linear-gradient(0deg, rgba(5, 5, 5, 0.92) 0%, rgba(5, 5, 5, 0.62) 68%, transparent 100%);
+}
+
+[data-theme="light"] .sgx-scrim-top {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.45) 70%, transparent 100%);
+}
+
+[data-theme="light"] .sgx-scrim-bottom {
+  background: linear-gradient(0deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.72) 72%, transparent 100%);
+}
+
+/* 40px Technical Grid Backdrop */
+.sgx-stage {
+  background-color: var(--surface);
+  background-image:
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+  background-size: var(--space-xl) var(--space-xl);
+}
+
+/* Official 45-degree engineering cut with continuous diagonal border */
+.sgx-panel,
+.sgx-btn,
+.sgx-alert,
+.sgx-cut {
+  border: 1px solid var(--sgx-edge);
+  background:
+    linear-gradient(
+      135deg,
+      transparent calc(50% - 0.5px),
+      var(--sgx-edge) calc(50% - 0.5px),
+      var(--sgx-edge) calc(50% + 1.2px),
+      transparent calc(50% + 1.2px)
+    )
+      top left / var(--sgx-cut) var(--sgx-cut) no-repeat border-box,
+    linear-gradient(
+      135deg,
+      transparent calc(50% - 1.2px),
+      var(--sgx-edge) calc(50% - 1.2px),
+      var(--sgx-edge) calc(50% + 0.5px),
+      transparent calc(50% + 0.5px)
+    )
+      bottom right / var(--sgx-cut) var(--sgx-cut) no-repeat border-box,
+    var(--sgx-fill);
+  clip-path: polygon(
+    var(--sgx-cut) 0,
+    100% 0,
+    100% calc(100% - var(--sgx-cut)),
+    calc(100% - var(--sgx-cut)) 100%,
+    0 100%,
+    0 var(--sgx-cut)
+  );
+}
+
+.sgx-panel {
+  --sgx-edge: var(--panel-line);
+  --sgx-fill: var(--panel);
+  --sgx-cut: var(--cut-lg);
+  color: var(--ink);
+}
+
+.sgx-panel--solid {
+  --sgx-fill: var(--panel-solid);
+}
+
+.sgx-cut {
+  --sgx-edge: var(--panel-line);
+  --sgx-fill: var(--panel);
+  --sgx-cut: var(--cut-sm);
+}
+
+/* Hardware switch button (44px touch-safe minimum) */
+.sgx-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  --sgx-edge: var(--action-line);
+  --sgx-fill: var(--action-tint);
+  --sgx-cut: var(--cut-md);
+  color: var(--action-line);
+  font-family: var(--font-hud);
+  font-weight: 600;
+  font-size: 0.8125rem;
+  line-height: 1.2;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding: 10px 16px;
+  min-height: 44px;
+  min-width: 44px;
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease, filter 0.2s ease, transform 0.12s ease;
+}
+
+.sgx-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.sgx-btn:hover:not(:disabled),
+.sgx-btn.is-active,
+.sgx-btn[aria-pressed="true"] {
+  --sgx-edge: var(--SGX_Yellow);
+  --sgx-fill: var(--SGX_Yellow);
+  color: var(--on-action);
+}
+
+.sgx-btn:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.sgx-btn--ground {
+  --sgx-edge: var(--SGX_Orange);
+  --sgx-fill: var(--ground-tint);
+  color: var(--ink);
+}
+
+.sgx-btn--ground:hover:not(:disabled),
+.sgx-btn--ground.is-active {
+  --sgx-edge: var(--SGX_Orange);
+  --sgx-fill: var(--SGX_Orange);
+  color: var(--on-action);
+}
+
+.sgx-btn--story {
+  --sgx-edge: var(--panel-line);
+  --sgx-fill: rgba(50, 82, 123, 0.2);
+  color: var(--ink);
+}
+
+.sgx-btn--story:hover:not(:disabled),
+.sgx-btn--story.is-active,
+.sgx-btn--story[aria-pressed="true"] {
+  --sgx-edge: var(--SGX_Yellow);
+  --sgx-fill: var(--SGX_Yellow);
+  color: var(--on-action);
+}
+
+.sgx-btn--alert {
+  --sgx-edge: var(--alert-line);
+  --sgx-fill: var(--alert-line);
+  color: var(--on-alert);
+}
+
+.sgx-btn--sm {
+  --sgx-cut: var(--cut-sm);
+  font-size: 0.75rem;
+  padding: 8px 12px;
+  min-height: 40px;
+  min-width: 40px;
+  letter-spacing: 0.06em;
+}
+
+.sgx-btn:disabled {
+  --sgx-edge: var(--disabled);
+  --sgx-fill: transparent;
+  color: var(--disabled);
+  cursor: not-allowed;
+}
+
+/* Glow wrapper: drop-shadow survives clip-path */
+.sgx-glow {
+  display: inline-flex;
+  transition: filter 0.2s ease;
+}
+
+.sgx-glow:hover,
+.sgx-glow:focus-within {
+  filter: drop-shadow(var(--glow-action));
+}
+
+.sgx-glow:has(.sgx-btn:disabled) {
+  filter: none;
+}
+
+/* Alert Banner */
+.sgx-alert {
+  --sgx-edge: var(--alert-line);
+  --sgx-fill: var(--panel-solid);
+  --sgx-cut: var(--cut-md);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+}
+
+.sgx-alert__tag {
+  flex: none;
+  padding: 2px 8px;
+  background: var(--SGX_Neon_Orange);
+  color: var(--on-alert);
+  font-family: var(--font-hud);
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Engineering Sliders (Touch-friendly 36px vertical hitbox + SGX rectangular thumb) */
+.sgx-range {
+  width: 100%;
+  height: 36px;
+  margin: 0;
+  background: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  touch-action: pan-y;
+}
+
+.sgx-range::-webkit-slider-runnable-track {
+  height: 3px;
+  background: var(--panel-line);
+}
+
+.sgx-range::-moz-range-track {
+  height: 3px;
+  background: var(--panel-line);
+}
+
+.sgx-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 26px;
+  margin-top: -11px;
+  border: 1px solid var(--SGX_Black_Base);
+  border-radius: 0;
+  background: var(--SGX_Yellow);
+  box-shadow: 0 0 8px rgba(253, 204, 13, 0.4);
+}
+
+.sgx-range::-moz-range-thumb {
+  width: 14px;
+  height: 26px;
+  border: 1px solid var(--SGX_Black_Base);
+  border-radius: 0;
+  background: var(--SGX_Yellow);
+}
+
+.sgx-range:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.sgx-range:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Telemetry Readout */
+.sgx-readout {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--telemetry);
+}
+
+/* Static Status LED (only for live camera / recording telemetry) */
+.sgx-led {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--telemetry);
+}
+
+.sgx-led--alert {
+  background: var(--SGX_Neon_Orange);
+}
+
+.sgx-led--pillar {
+  background: var(--pillar);
+}
+
+/* Thin HUD scanline rule */
+.sgx-hud-rule {
+  height: 1px;
+  width: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--telemetry) 0%,
+    rgba(0, 221, 255, 0.35) 45%,
+    transparent 100%
+  );
+  opacity: 0.55;
+}
+
+/* Color input reset (sharp engineering square) */
+input[type="color"].sgx-color-input {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--panel-line);
+  background: transparent;
+  cursor: pointer;
+}
+
+input[type="color"].sgx-color-input::-webkit-color-swatch-wrapper {
+  padding: 2px;
+}
+
+input[type="color"].sgx-color-input::-webkit-color-swatch {
+  border: none;
+}
+
+/* Hide scrollbars cleanly for swipeable era wheel */
+.sgx-no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.sgx-no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Custom subtle scrollbars for drawers */
+.sgx-scroll::-webkit-scrollbar {
+  height: 5px;
+  width: 5px;
+}
+
+.sgx-scroll::-webkit-scrollbar-track {
+  background: rgba(50, 82, 123, 0.15);
+}
+
+.sgx-scroll::-webkit-scrollbar-thumb {
+  background: var(--SGX_Blue);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sgx-btn,
+  .sgx-glow {
+    transition: none;
+  }
+}

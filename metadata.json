@@ -1,0 +1,7 @@
+{
+  "name": "SGX Story Time - Temporal Visualizer",
+  "description": "Real-time Three.js WebGL camera shader visualizer across decades from the 1930s to 2030s with photo and video capture.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
