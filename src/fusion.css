@@ -1,0 +1,128 @@
+/* Distribución de SGX Desmadre: lienzo a pantalla completa (z 0) y HUD encima (z 10). */
+
+#root { width: 100%; height: 100dvh; }
+h1, h2, p, ul { margin: 0; }
+ul { padding: 0; list-style: none; }
+button, select, input { font: inherit; color: inherit; }
+button:disabled { opacity: 0.5; cursor: wait; }
+
+.fx-root { position: fixed; inset: 0; overflow: hidden; user-select: none; -webkit-user-select: none; }
+.fx-canvas { position: absolute; inset: 0; z-index: var(--z-canvas); cursor: crosshair; }
+.fx-center { position: absolute; inset: 0; z-index: 20; display: grid; place-items: center; padding: var(--space-lg); }
+
+.fx-hud {
+  position: absolute; inset: 0; z-index: var(--z-hud);
+  display: grid; gap: var(--space-sm); padding: var(--space-sm);
+  grid-template-columns: 230px minmax(0, 1fr) 340px;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-areas: "head head head" "alert alert alert" "rail . panel" "dock dock dock";
+  pointer-events: none;
+}
+.fx-hud > * { pointer-events: auto; }
+
+/* --- Cabecera --- */
+.fx-head { grid-area: head; display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-sm) var(--space-md); padding: var(--space-sm) var(--space-md); }
+.fx-head__mark { width: 34px; height: 34px; flex: none; }
+.fx-head__titles { min-width: 0; }
+.fx-head__telemetry { display: flex; flex-wrap: wrap; gap: 4px var(--space-md); margin-left: auto; }
+.fx-head__actions { display: flex; gap: var(--space-sm); }
+.fx-alert { grid-area: alert; justify-self: center; max-width: 720px; }
+
+/* --- Cadena de señal --- */
+.fx-rail { grid-area: rail; align-self: start; max-height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+.fx-rail__title { color: var(--ink-muted); padding: 2px 4px; text-shadow: 0 1px 4px #000; }
+.fx-node { --node: var(--SGX_Grey); position: relative; display: flex; background: var(--panel-solid); border: 1px solid var(--panel-line); border-left: 4px solid var(--node); }
+/* La línea que une los nodos es el camino de la señal */
+.fx-node + .fx-node::before { content: ""; position: absolute; left: 14px; top: -7px; width: 2px; height: 6px; background: var(--SGX_Cyan); }
+.fx-node[data-selected="true"] { border-color: var(--SGX_Yellow); border-left-color: var(--node); }
+.fx-node[data-off="true"] .fx-node__body { opacity: 0.55; }
+.fx-node__power, .fx-node__body { background: none; border: 0; cursor: pointer; min-height: 44px; }
+.fx-node__power { display: flex; align-items: center; gap: 6px; flex: none; width: 62px; padding: 0 8px; border-right: 1px solid var(--line); font-family: var(--font-mono); font-size: 0.8rem; color: var(--telemetry); }
+.fx-node__power[aria-pressed="false"] { color: var(--SGX_Grey); }
+.fx-led-off { background: var(--SGX_Dark_Grey); box-shadow: none; }
+.fx-node__body { flex: 1; min-width: 0; display: grid; grid-template-columns: auto 1fr; gap: 0 8px; align-items: baseline; padding: 6px 10px; text-align: left; }
+.fx-node__index { font-family: var(--font-mono); font-size: 0.8rem; color: var(--telemetry); }
+.fx-node__name { font-family: var(--font-hud); font-weight: 600; font-size: 0.9rem; letter-spacing: 0.06em; }
+.fx-node__detail { grid-column: 1 / -1; font-family: var(--font-hud); font-size: 0.8rem; color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; }
+.fx-node__power:focus-visible, .fx-node__body:focus-visible, .fx-recipe:focus-visible, .fx-swatch:focus-visible, .fx-select select:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+
+/* --- Panel del motor seleccionado --- */
+.fx-panel { grid-area: panel; align-self: start; max-height: 100%; display: flex; flex-direction: column; gap: var(--space-sm); min-height: 0; }
+.fx-panel__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm); }
+.fx-panel__body { display: flex; flex-direction: column; gap: var(--space-md); overflow-y: auto; min-height: 0; padding-right: 6px; }
+.fx-note { font-family: var(--font-body); font-size: 0.85rem; line-height: 1.4; color: var(--ink-muted); }
+.fx-break { word-break: break-all; user-select: all; -webkit-user-select: all; }
+.fx-routed { color: var(--telemetry); text-transform: none; letter-spacing: 0; }
+
+.fx-select { display: grid; gap: 6px; }
+.fx-select select { width: 100%; min-height: 40px; padding: 6px 10px; background: var(--SGX_Black_Base); border: 1px solid var(--panel-line); font-family: var(--font-hud); font-size: 0.85rem; text-transform: uppercase; cursor: pointer; }
+.fx-seg { display: grid; gap: 6px; }
+.fx-seg__row { display: flex; flex-wrap: wrap; gap: 6px; }
+.fx-swatch { width: 44px; height: 36px; border: 1px solid var(--line); cursor: pointer; }
+.fx-swatch[aria-pressed="true"] { border: 2px solid var(--SGX_White); }
+.fx-file { position: relative; overflow: hidden; align-self: start; }
+.fx-file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.fx-file[data-active="true"] { --sgx-fill: var(--SGX_Yellow); color: var(--on-action); }
+.fx-route { display: grid; gap: var(--space-sm); padding: var(--space-sm); border: 1px solid var(--line); border-left: 3px solid var(--SGX_Cyan); }
+
+.fx-meters { display: grid; gap: 4px; }
+.fx-meter { display: grid; grid-template-columns: 9.5em 1fr; align-items: center; gap: 8px; }
+.fx-meter__k { font-family: var(--font-mono); font-size: 0.8rem; color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fx-meter__track { height: 6px; background: var(--SGX_Dark_Grey); overflow: hidden; }
+.fx-meter__fill { display: block; height: 100%; background: var(--SGX_Cyan); transform-origin: left; transform: scaleX(0); }
+
+.fx-captures { display: grid; gap: var(--space-md); }
+.fx-captures li { display: grid; gap: 6px; justify-items: start; }
+.fx-captures img, .fx-captures video { width: 100%; border: 1px solid var(--panel-line); display: block; }
+.fx-qr { width: 200px; height: 200px; image-rendering: pixelated; }
+
+/* --- Barra inferior --- */
+.fx-dock { grid-area: dock; display: flex; align-items: center; gap: var(--space-md); padding: var(--space-sm) var(--space-md); }
+.fx-recipes { display: flex; gap: 6px; overflow-x: auto; flex: 1; min-width: 0; padding-bottom: 2px; }
+.fx-recipe { --node: var(--SGX_Grey); flex: none; display: grid; gap: 2px; min-height: 44px; padding: 6px 12px; text-align: left; background: var(--SGX_Black_Base); border: 1px solid var(--line); border-top: 3px solid var(--node); cursor: pointer; transition: border-color 0.3s ease, background-color 0.3s ease; }
+.fx-recipe:hover { border-color: var(--SGX_Yellow); border-top-color: var(--node); }
+.fx-recipe[aria-pressed="true"] { border-color: var(--SGX_Yellow); border-top-color: var(--node); background: var(--action-tint); }
+.fx-recipe__pillar { font-family: var(--font-mono); font-size: 0.8rem; color: var(--ink-muted); }
+.fx-recipe__title { font-family: var(--font-hud); font-weight: 600; font-size: 0.9rem; letter-spacing: 0.06em; text-transform: uppercase; }
+.fx-actions { display: flex; align-items: center; gap: 6px; flex: none; }
+.fx-desmadre { --sgx-fill: var(--SGX_Yellow); color: var(--on-action); font-family: var(--font-display); font-weight: 900; font-size: 0.95rem; min-height: 44px; padding: 8px 22px; }
+
+.fx-restore { position: absolute; right: var(--space-sm); bottom: var(--space-sm); z-index: var(--z-hud); }
+.fx-toast { position: absolute; left: 50%; top: 22%; transform: translateX(-50%); z-index: 20; padding: 8px 16px; background: var(--SGX_Black_Base); border: 1px solid var(--SGX_Cyan); color: var(--SGX_Cyan); pointer-events: none; white-space: nowrap; }
+
+/* --- Teléfono y pantallas angostas: la cadena pasa a una tira y el panel a una hoja inferior --- */
+@media (max-width: 900px) {
+  .fx-hud {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+    grid-template-areas: "head" "alert" "panel" "rail" "dock";
+    padding: 6px; gap: 6px;
+  }
+  .fx-head { padding: 6px var(--space-sm); }
+  .fx-head__mark { width: 28px; height: 28px; }
+  .fx-head__titles p, .fx-rail__title { display: none; }
+  .fx-head__telemetry { margin-left: 0; order: 3; width: 100%; gap: 2px var(--space-sm); }
+  .fx-head__telemetry .sgx-readout { font-size: 0.8rem; }
+  .fx-head__actions { margin-left: auto; }
+  .fx-rail { flex-direction: row; overflow-x: auto; overflow-y: hidden; align-self: end; padding-bottom: 2px; }
+  .fx-node { flex: none; width: 168px; }
+  .fx-node + .fx-node::before { left: -7px; top: 20px; width: 6px; height: 2px; }
+  .fx-panel { align-self: end; justify-self: end; width: min(100%, 400px); max-height: min(100%, 52dvh); padding: var(--space-sm) var(--space-md); }
+  .fx-dock { flex-direction: column; align-items: stretch; gap: 6px; padding: 6px var(--space-sm); }
+  .fx-actions { overflow-x: auto; }
+  .fx-toast { top: 30%; }
+}
+
+/* --- Vista de control remoto --- */
+.fx-ctrl { min-height: 100dvh; height: 100dvh; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-sm); padding: var(--space-sm); }
+.fx-ctrl__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.fx-ctrl__engine { padding: var(--space-sm) var(--space-md); flex: none; }
+.fx-ctrl__engine summary { display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm); min-height: 44px; cursor: pointer; list-style: none; }
+.fx-ctrl__engine summary::-webkit-details-marker { display: none; }
+.fx-ctrl__engine summary > span::before { content: "[+] "; color: var(--telemetry); font-family: var(--font-mono); }
+.fx-ctrl__engine[open] summary > span::before { content: "[-] "; }
+.fx-ctrl__engine .fx-panel__body { overflow: visible; padding: var(--space-sm) 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-recipe { transition: none; }
+}

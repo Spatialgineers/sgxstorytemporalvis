@@ -1,0 +1,576 @@
+/* =========================================================================
+   Tokens y componentes base, compartidos por los cinco motores
+   ========================================================================= */
+
+:root {
+  --font-display: "Orbitron", ui-monospace, monospace;
+  --font-hud: "Chakra Petch", ui-monospace, monospace;
+  --font-body: "Exo 2", system-ui, sans-serif;
+  --font-mono: "Share Tech Mono", ui-monospace, monospace;
+
+  /* Official SGX Palette */
+  --SGX_Blue: #32527b;
+  --SGX_Grey: #888888;
+  --SGX_Dark_Grey: #333333;
+  --SGX_Yellow: #fdcc0d;
+  --SGX_Orange: #b87000;
+  --SGX_Cyan: #00ddff;
+  --SGX_Neon_Orange: #ffbb00;
+  --SGX_Metal_Dark: #1a1a1a;
+  --SGX_Black_Base: #050505;
+  --SGX_White: #ffffff;
+  --SGX_Black: #000000;
+  --SGX_Cream: #fff9e2;
+
+  /* Active Pillar Accent (default SGX.Spark) */
+  --pillar: var(--SGX_Orange);
+
+  /* Roles · Dark HUD (default) */
+  --surface: var(--SGX_Black_Base);
+  --surface-elevated: var(--SGX_Metal_Dark);
+  --panel: rgba(18, 20, 24, 0.88);
+  --panel-solid: rgba(18, 20, 24, 0.96);
+  --panel-line: rgba(50, 82, 123, 0.65);
+  --line: var(--SGX_Dark_Grey);
+  --ink: var(--SGX_White);
+  --ink-muted: #b0b4bc;
+  --action-line: var(--SGX_Yellow);
+  --action-tint: rgba(253, 204, 13, 0.08);
+  --on-action: var(--SGX_Black_Base);
+  --ground-tint: rgba(184, 112, 0, 0.14);
+  --telemetry: var(--SGX_Cyan);
+  --accent-text: var(--SGX_Yellow);
+  --alert-line: var(--SGX_Neon_Orange);
+  --on-alert: var(--SGX_Black_Base);
+  --focus-ring: var(--SGX_Cyan);
+  --disabled: var(--SGX_Grey);
+
+  /* Spacing & Engineering Geometry */
+  --space-xs: 5px;
+  --space-sm: 10px;
+  --space-md: 15px;
+  --space-lg: 20px;
+  --space-xl: 40px;
+  --radius-none: 0px;
+  --radius-round: 50%;
+  --cut-lg: 15px;
+  --cut-md: 10px;
+  --glow-action: 0 0 15px rgba(253, 204, 13, 0.45);
+  --z-canvas: 0;
+  --z-hud: 10;
+}
+
+[data-theme="light"] {
+  --surface: var(--SGX_White);
+  --surface-elevated: var(--SGX_Cream);
+  --panel: rgba(255, 255, 255, 0.94);
+  --panel-solid: rgba(255, 255, 255, 0.98);
+  --panel-line: rgba(50, 82, 123, 0.5);
+  --line: #c4ccd6;
+  --ink: var(--SGX_Metal_Dark);
+  --ink-muted: var(--SGX_Blue);
+  --action-line: var(--SGX_Black_Base);
+  --action-tint: var(--SGX_Cream);
+  --on-action: var(--SGX_Black_Base);
+  --ground-tint: #f7eee0;
+  --telemetry: var(--SGX_Blue);
+  --accent-text: var(--SGX_Orange);
+  --alert-line: var(--SGX_Orange);
+  --on-alert: var(--SGX_Black_Base);
+  --focus-ring: var(--SGX_Blue);
+}
+
+.sgx-header {
+  background: var(--panel-solid);
+  border-bottom: 1px solid var(--panel-line);
+  color: var(--ink);
+}
+
+.sgx-ink-text {
+  color: var(--ink);
+}
+
+.sgx-muted-text {
+  color: var(--ink-muted);
+}
+
+.sgx-accent-text {
+  color: var(--accent-text);
+}
+
+.sgx-telemetry-text {
+  color: var(--telemetry);
+}
+
+.sgx-alert-text {
+  color: var(--alert-line);
+}
+
+.sgx-drawer-grip {
+  display: inline-block;
+  width: 38px;
+  height: 4px;
+  background: var(--panel-line);
+  flex-shrink: 0;
+}
+
+*, *::before, *::after {
+  border-radius: 0px;
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  background-color: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+/* Technical 40px Grid */
+.sgx-grid-bg {
+  background-color: var(--surface);
+  background-image:
+    linear-gradient(rgba(50, 82, 123, 0.25) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(50, 82, 123, 0.25) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Typography Classes */
+.sgx-type-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1rem, 2vw, 1.4rem);
+  line-height: 1.1;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.sgx-type-hud {
+  font-family: var(--font-hud);
+  font-size: 0.85rem;
+  line-height: 1.25;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sgx-type-caption {
+  font-family: var(--font-hud);
+  font-size: 0.8rem;
+  line-height: 1.25;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.sgx-type-body {
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.sgx-type-telemetry {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+  color: var(--telemetry);
+}
+
+/* 45° Engineering Cut Surfaces */
+.sgx-panel,
+.sgx-btn,
+.sgx-alert,
+.sgx-loader,
+.sgx-cut {
+  border: 1px solid var(--sgx-edge);
+  background:
+    linear-gradient(
+      135deg,
+      transparent calc(50% - 0.5px),
+      var(--sgx-edge) calc(50% - 0.5px),
+      var(--sgx-edge) calc(50% + 1.2px),
+      transparent calc(50% + 1.2px)
+    ) top left / var(--sgx-cut) var(--sgx-cut) no-repeat border-box,
+    linear-gradient(
+      135deg,
+      transparent calc(50% - 1.2px),
+      var(--sgx-edge) calc(50% - 1.2px),
+      var(--sgx-edge) calc(50% + 0.5px),
+      transparent calc(50% + 0.5px)
+    ) bottom right / var(--sgx-cut) var(--sgx-cut) no-repeat border-box,
+    var(--sgx-fill);
+  clip-path: polygon(
+    var(--sgx-cut) 0,
+    100% 0,
+    100% calc(100% - var(--sgx-cut)),
+    calc(100% - var(--sgx-cut)) 100%,
+    0 100%,
+    0 var(--sgx-cut)
+  );
+}
+
+.sgx-cut {
+  --sgx-edge: var(--panel-line);
+  --sgx-fill: var(--panel);
+  --sgx-cut: var(--cut-md);
+}
+
+.sgx-panel {
+  --sgx-edge: var(--panel-line);
+  --sgx-fill: var(--panel);
+  --sgx-cut: var(--cut-lg);
+  padding: var(--space-md) var(--space-lg);
+  color: var(--ink);
+}
+
+.sgx-panel--solid {
+  --sgx-fill: var(--panel-solid);
+}
+
+.sgx-panel__rule {
+  height: 1px;
+  border: 0;
+  margin: var(--space-sm) 0;
+  background: var(--line);
+}
+
+/* Hardware Switch Buttons */
+.sgx-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  --sgx-edge: var(--action-line);
+  --sgx-fill: var(--action-tint);
+  --sgx-cut: var(--cut-md);
+  color: var(--action-line);
+  font-family: var(--font-hud);
+  font-weight: 600;
+  font-size: 0.8rem;
+  line-height: 1.2;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-height: 40px;
+  padding: 8px 16px;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.2s ease, background-color 0.2s ease, transform 0.15s ease;
+}
+
+.sgx-btn:hover,
+.sgx-btn.is-active,
+.sgx-btn[aria-pressed="true"] {
+  --sgx-edge: var(--SGX_Yellow);
+  --sgx-fill: var(--SGX_Yellow);
+  color: var(--on-action);
+}
+
+.sgx-btn:active {
+  transform: scale(0.97);
+}
+
+.sgx-btn:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.sgx-btn--ground {
+  --sgx-edge: var(--SGX_Orange);
+  --sgx-fill: var(--ground-tint);
+  color: var(--ink);
+}
+
+.sgx-btn--ground:hover,
+.sgx-btn--ground.is-active,
+.sgx-btn--ground[aria-pressed="true"] {
+  --sgx-edge: var(--SGX_Orange);
+  --sgx-fill: var(--SGX_Orange);
+  color: var(--on-action);
+}
+
+.sgx-btn--blue {
+  --sgx-edge: var(--SGX_Blue);
+  --sgx-fill: rgba(50, 82, 123, 0.2);
+  color: var(--ink);
+}
+
+.sgx-btn--blue:hover,
+.sgx-btn--blue.is-active,
+.sgx-btn--blue[aria-pressed="true"] {
+  --sgx-edge: var(--SGX_Cyan);
+  --sgx-fill: var(--SGX_Cyan);
+  color: var(--on-action);
+}
+
+.sgx-btn--sm {
+  min-height: 36px;
+  padding: 6px 12px;
+  font-size: 0.78rem;
+}
+
+/* Glow wrapper (filter survives clip-path) */
+.sgx-glow {
+  display: inline-flex;
+  transition: filter 0.2s ease;
+}
+
+.sgx-glow:hover,
+.sgx-glow:focus-within {
+  filter: drop-shadow(var(--glow-action));
+}
+
+/* Static Telemetry LED (round allowed only on LEDs) */
+.sgx-led {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: var(--radius-round);
+  background: var(--telemetry);
+  box-shadow: 0 0 6px var(--telemetry);
+}
+
+.sgx-led--alert {
+  background: var(--alert-line);
+  box-shadow: 0 0 6px var(--alert-line);
+}
+
+.sgx-led--action {
+  background: var(--SGX_Yellow);
+  box-shadow: 0 0 6px var(--SGX_Yellow);
+}
+
+.sgx-readout {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.3;
+  color: var(--telemetry);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.sgx-readout__k {
+  color: var(--ink-muted);
+}
+
+/* Custom Engineering Range Sliders */
+.sgx-field {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+
+.sgx-field__label {
+  font-family: var(--font-hud);
+  font-size: 0.78rem;
+  line-height: 1.2;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.sgx-field__value {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.3;
+  color: var(--telemetry);
+  font-variant-numeric: tabular-nums;
+}
+
+.sgx-range {
+  grid-column: 1 / -1;
+  width: 100%;
+  height: 36px;
+  margin: 0;
+  background: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  touch-action: pan-y;
+}
+
+.sgx-range::-webkit-slider-runnable-track {
+  height: 3px;
+  background: var(--line);
+}
+
+.sgx-range::-moz-range-track {
+  height: 3px;
+  background: var(--line);
+}
+
+.sgx-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 22px;
+  margin-top: -10px;
+  border: 1px solid var(--action-line);
+  border-radius: 0px;
+  background: var(--SGX_Yellow);
+}
+
+.sgx-range::-moz-range-thumb {
+  width: 14px;
+  height: 22px;
+  border: 1px solid var(--action-line);
+  border-radius: 0px;
+  background: var(--SGX_Yellow);
+}
+
+.sgx-range:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Alert Banner */
+.sgx-alert {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  --sgx-edge: var(--alert-line);
+  --sgx-fill: var(--panel-solid);
+  --sgx-cut: var(--cut-md);
+  padding: 8px 12px;
+}
+
+.sgx-alert__tag {
+  flex: none;
+  padding: 2px 8px;
+  background: var(--SGX_Neon_Orange);
+  color: var(--on-alert);
+  font-family: var(--font-hud);
+  font-weight: 700;
+  font-size: 0.74rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.sgx-alert__msg {
+  flex: 1 1 180px;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  color: var(--ink);
+}
+
+/* Loader */
+.sgx-loader {
+  width: min(400px, calc(100vw - 32px));
+  display: grid;
+  gap: 12px;
+  --sgx-edge: var(--panel-line);
+  --sgx-fill: var(--panel-solid);
+  --sgx-cut: var(--cut-lg);
+  padding: 24px;
+}
+
+.sgx-loader__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.15rem;
+  line-height: 1.2;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.sgx-loader__bar {
+  position: relative;
+  height: 6px;
+  overflow: hidden;
+  border: 1px solid var(--action-line);
+}
+
+.sgx-loader__bar > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 35%;
+  background: var(--SGX_Yellow);
+  animation: sgx-scan 1.4s ease-in-out infinite;
+}
+
+.sgx-loader__log {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: var(--telemetry);
+}
+
+/* Viewfinder Corners */
+.sgx-viewfinder-corner {
+  position: fixed;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.sgx-viewfinder-corner--tl {
+  top: 58px;
+  left: 10px;
+  border-top: 2px solid var(--SGX_Yellow);
+  border-left: 2px solid var(--SGX_Yellow);
+}
+
+.sgx-viewfinder-corner--tr {
+  top: 58px;
+  right: 10px;
+  border-top: 2px solid var(--SGX_Yellow);
+  border-right: 2px solid var(--SGX_Yellow);
+}
+
+.sgx-viewfinder-corner--bl {
+  bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+  left: 10px;
+  border-bottom: 2px solid var(--SGX_Yellow);
+  border-left: 2px solid var(--SGX_Yellow);
+}
+
+.sgx-viewfinder-corner--br {
+  bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+  right: 10px;
+  border-bottom: 2px solid var(--SGX_Yellow);
+  border-right: 2px solid var(--SGX_Yellow);
+}
+
+/* VHS Scanlines Overlay */
+.sgx-scanlines {
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.2),
+    rgba(0, 0, 0, 0.2) 2px,
+    transparent 2px,
+    transparent 4px
+  );
+  pointer-events: none;
+  z-index: 4;
+}
+
+
+.sgx-scroll { scrollbar-width: thin; scrollbar-color: var(--SGX_Blue) transparent; }
+.sgx-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
+.sgx-scroll::-webkit-scrollbar-thumb { background: var(--SGX_Blue); }
+
+@keyframes sgx-scan {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(290%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sgx-loader__bar > span { animation: none; width: 60%; }
+  .sgx-btn, .sgx-glow { transition: none; }
+}

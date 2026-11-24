@@ -16,5 +16,5 @@ app.use((_req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`SGX Story Time server listening on http://0.0.0.0:${PORT}`);
+  console.log(`SGX Desmadre en on http://0.0.0.0:${PORT}`);
 });

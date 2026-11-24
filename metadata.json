@@ -1,7 +1,8 @@
 {
-  "name": "SGX Story Time - Temporal Visualizer",
-  "description": "Real-time Three.js WebGL camera shader visualizer across decades from the 1930s to 2030s with photo and video capture.",
+  "name": "SGX Desmadre | Spatialgineers",
+  "description": "Los cinco motores visuales SGX (Story, Spark, Synthesize, Nexus y Glitch) fundidos en una sola cadena de señal WebGL, con audio, seguimiento de manos y control remoto.",
   "requestFramePermissions": [
-    "camera"
+    "camera",
+    "microphone"
   ]
 }
